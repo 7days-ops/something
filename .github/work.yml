@@ -1,0 +1,43 @@
+name: Test , Build , Deploy
+
+on: 
+  push:
+    branches: [ main ]
+pull_request:
+    branches: [ main ]
+workflow_dispatch: 
+
+jobs:
+  build-and-test:
+    name: CI
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      
+      - name: Install dependies
+        run: go mod tidy
+      
+      - name: Tests
+        run: go test -v ./...
+
+  docker-build:
+    name: CD
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install docker
+        run: docker build -t myapp:latest .
+
+      - name: Run docker
+        run: docker run --rm myapp:latest
